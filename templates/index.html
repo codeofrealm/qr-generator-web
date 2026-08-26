@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Zeronex QR Generator</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="background"></div>
+
+    <main class="container">
+
+        <header class="hero">
+
+            <div class="brand">
+                <span class="brand-dot"></span>
+                Zeronex
+            </div>
+
+            <h1>
+                QR Code
+                <span>Generator</span>
+            </h1>
+
+            <p>
+                Create clean and high-quality QR codes
+                from any link or text.
+            </p>
+
+        </header>
+
+
+        <section class="card">
+
+            <form method="POST">
+
+                <label for="data">
+                    Enter link or text
+                </label>
+
+                <div class="input-box">
+
+                    <input
+                        id="data"
+                        name="data"
+                        type="text"
+                        placeholder="https://example.com"
+                        autocomplete="off"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="generate-btn"
+                >
+
+                    <span>
+                        Generate QR Code
+                    </span>
+
+                    <span class="arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+
+            {% if qr_file %}
+
+            <div class="result">
+
+                <div class="result-title">
+
+                    <span class="success-dot"></span>
+
+                    QR Code Generated
+
+                </div>
+
+
+                <div class="qr-wrapper">
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='qr_codes/' + qr_file
+                        ) }}"
+                        alt="Zeronex QR Code"
+                        class="qr-image"
+                    >
+
+                </div>
+
+
+                <p class="watermark-info">
+
+                    <span>
+                        Zeronex
+                    </span>
+
+                    watermark automatically applied
+
+                </p>
+
+
+                <a
+                    href="{{ url_for(
+                        'download',
+                        filename=qr_file
+                    ) }}"
+                    class="download-btn"
+                >
+
+                    <span>
+                        Download QR Code
+                    </span>
+
+                    <span>
+                        ↓
+                    </span>
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <footer>
+
+            <span>Fast</span>
+
+            <span>•</span>
+
+            <span>Secure</span>
+
+            <span>•</span>
+
+            <span>High Quality</span>
+
+        </footer>
+
+    </main>
+
+
+    <script>
+
+        const input = document.getElementById("data");
+
+        if (input) {
+            input.focus();
+        }
+
+    </script>
+
+</body>
+
+</html>
