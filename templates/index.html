@@ -10,7 +10,17 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="theme-color"
+        content="#050505"
+    >
+
     <title>Zeronex QR Generator</title>
+
+    <link
+        rel="icon"
+        href="data:,"
+    >
 
     <link
         rel="stylesheet"
@@ -19,41 +29,86 @@
 
 </head>
 
+
 <body>
 
-    <div class="background"></div>
+
+    <!-- Background -->
+
+    <div class="background">
+
+        <div class="glow glow-one"></div>
+
+        <div class="glow glow-two"></div>
+
+    </div>
+
+
+
+    <!-- Main -->
 
     <main class="container">
 
+
+        <!-- Hero -->
+
         <header class="hero">
 
+
             <div class="brand">
+
                 <span class="brand-dot"></span>
-                Zeronex
+
+                <span>Zeronex</span>
+
             </div>
 
+
             <h1>
+
                 QR Code
+
                 <span>Generator</span>
+
             </h1>
 
+
             <p>
+
                 Create clean and high-quality QR codes
                 from any link or text.
+
             </p>
+
 
         </header>
 
 
+
+        <!-- Generator Card -->
+
         <section class="card">
 
-            <form method="POST">
+
+            <form
+                id="qrForm"
+                method="POST"
+                action="{{ url_for('generate') }}"
+                autocomplete="off"
+            >
+
 
                 <label for="data">
+
                     Enter link or text
+
                 </label>
 
-                <div class="input-box">
+
+                <div
+                    class="input-box"
+                    id="inputBox"
+                >
 
                     <input
                         id="data"
@@ -61,91 +116,169 @@
                         type="text"
                         placeholder="https://example.com"
                         autocomplete="off"
+                        spellcheck="false"
                         required
                     >
 
+
+                    <button
+                        type="button"
+                        class="clear-btn"
+                        id="clearBtn"
+                        aria-label="Clear input"
+                    >
+
+                        ×
+
+                    </button>
+
                 </div>
+
+
+
+                <!-- Generate -->
 
                 <button
                     type="submit"
                     class="generate-btn"
+                    id="generateBtn"
                 >
 
-                    <span>
-                        Generate QR Code
+                    <span
+                        class="button-content"
+                        id="buttonContent"
+                    >
+
+                        <span>
+                            Generate QR Code
+                        </span>
+
+                        <span class="arrow">
+                            →
+                        </span>
+
                     </span>
 
-                    <span class="arrow">
-                        →
+
+                    <span
+                        class="loading-content"
+                        id="loadingContent"
+                    >
+
+                        <span class="spinner"></span>
+
+                        Generating...
+
                     </span>
 
                 </button>
 
+
             </form>
 
 
-            {% if qr_file %}
 
-            <div class="result">
+            <!-- Error -->
+
+            <div
+                class="error-message"
+                id="errorMessage"
+            >
+
+                <span>!</span>
+
+                <p></p>
+
+            </div>
+
+
+
+            <!-- QR Result -->
+
+            <div
+                class="result"
+                id="result"
+            >
+
 
                 <div class="result-title">
 
                     <span class="success-dot"></span>
 
-                    QR Code Generated
+                    <span>QR Code Generated</span>
 
                 </div>
+
 
 
                 <div class="qr-wrapper">
 
                     <img
-                        src="{{ url_for(
-                            'static',
-                            filename='qr_codes/' + qr_file
-                        ) }}"
-                        alt="Zeronex QR Code"
+                        id="qrImage"
                         class="qr-image"
+                        alt="Generated Zeronex QR Code"
                     >
 
                 </div>
 
 
+
                 <p class="watermark-info">
 
-                    <span>
-                        Zeronex
-                    </span>
+                    <strong>Zeronex</strong>
 
                     watermark automatically applied
 
                 </p>
 
 
-                <a
-                    href="{{ url_for(
-                        'download',
-                        filename=qr_file
-                    ) }}"
-                    class="download-btn"
+
+                <!-- Download -->
+
+                <form
+                    id="downloadForm"
+                    method="POST"
+                    action="{{ url_for('download') }}"
                 >
 
-                    <span>
-                        Download QR Code
-                    </span>
+                    <input
+                        type="hidden"
+                        id="downloadData"
+                        name="data"
+                    >
 
-                    <span>
-                        ↓
-                    </span>
 
-                </a>
+                    <button
+                        type="submit"
+                        class="download-btn"
+                    >
+
+                        <span>
+
+                            Download QR Code
+
+                        </span>
+
+
+                        <span class="download-icon">
+
+                            ↓
+
+                        </span>
+
+                    </button>
+
+                </form>
+
 
             </div>
 
-            {% endif %}
 
         </section>
 
+
+
+        <!-- Footer -->
 
         <footer>
 
@@ -157,22 +290,207 @@
 
             <span>•</span>
 
-            <span>High Quality</span>
+            <span>No server image storage</span>
 
         </footer>
+
 
     </main>
 
 
+
     <script>
 
-        const input = document.getElementById("data");
+        const form =
+            document.getElementById("qrForm");
 
-        if (input) {
-            input.focus();
+        const input =
+            document.getElementById("data");
+
+        const generateBtn =
+            document.getElementById("generateBtn");
+
+        const buttonContent =
+            document.getElementById("buttonContent");
+
+        const loadingContent =
+            document.getElementById("loadingContent");
+
+        const result =
+            document.getElementById("result");
+
+        const qrImage =
+            document.getElementById("qrImage");
+
+        const errorMessage =
+            document.getElementById("errorMessage");
+
+        const clearBtn =
+            document.getElementById("clearBtn");
+
+        const downloadData =
+            document.getElementById("downloadData");
+
+
+        // --------------------------------
+        // Input
+        // --------------------------------
+
+        function updateClearButton() {
+
+            if (input.value.trim()) {
+
+                clearBtn.classList.add("show");
+
+            } else {
+
+                clearBtn.classList.remove("show");
+
+            }
+
         }
 
+
+        input.addEventListener(
+            "input",
+            updateClearButton
+        );
+
+
+        clearBtn.addEventListener(
+            "click",
+            function () {
+
+                input.value = "";
+
+                input.focus();
+
+                updateClearButton();
+
+            }
+        );
+
+
+        // --------------------------------
+        // Error
+        // --------------------------------
+
+        function showError(message) {
+
+            errorMessage.querySelector("p").textContent =
+                message;
+
+            errorMessage.classList.add("show");
+
+        }
+
+
+        function hideError() {
+
+            errorMessage.classList.remove("show");
+
+        }
+
+
+        // --------------------------------
+        // Loading
+        // --------------------------------
+
+        function setLoading(state) {
+
+            if (state) {
+
+                generateBtn.disabled = true;
+
+                buttonContent.style.display =
+                    "none";
+
+                loadingContent.style.display =
+                    "flex";
+
+            } else {
+
+                generateBtn.disabled = false;
+
+                buttonContent.style.display =
+                    "flex";
+
+                loadingContent.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        // --------------------------------
+        // Generate QR
+        // --------------------------------
+
+        form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const data = input.value.trim();
+
+    if (!data) {
+        showError("Please enter a link or text.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("data", data);
+
+    const response = await fetch("/generate", {
+        method: "POST",
+        body: formData
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok || !responseData.success) {
+        throw new Error(
+            responseData.message || "Unable to generate QR code."
+        );
+    }
+
+    qrImage.src =
+        "data:image/png;base64," +
+        responseData.qr;
+
+    downloadData.value = data;
+
+    result.classList.add("show");
+});
+
+
+        // --------------------------------
+        // Download
+        // --------------------------------
+
+        document
+            .getElementById("downloadForm")
+            .addEventListener(
+                "submit",
+                function () {
+
+                    const data =
+                        input.value.trim();
+
+                    downloadData.value =
+                        data;
+
+                }
+            );
+
+
+        // Initial state
+
+        updateClearButton();
+
+        input.focus();
+
     </script>
+
 
 </body>
 

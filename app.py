@@ -1,14 +1,18 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import qrcode
 from qrcode.constants import ERROR_CORRECT_H
 from PIL import Image, ImageDraw, ImageFont
 import io
+import base64
 
 app = Flask(__name__)
 
 
 def create_qr(data):
+    # --------------------------------
     # Create QR code in memory
+    # --------------------------------
+
     qr = qrcode.QRCode(
         version=1,
         error_correction=ERROR_CORRECT_H,
@@ -24,9 +28,10 @@ def create_qr(data):
         back_color="white"
     ).convert("RGBA")
 
-    # -----------------------------
+
+    # --------------------------------
     # Zeronex watermark
-    # -----------------------------
+    # --------------------------------
 
     overlay = Image.new(
         "RGBA",
@@ -44,6 +49,7 @@ def create_qr(data):
     except OSError:
         font = ImageFont.load_default()
 
+
     watermark = "Zeronex"
 
     bbox = draw.textbbox(
@@ -58,6 +64,7 @@ def create_qr(data):
     x = (img.width - text_width) // 2
     y = (img.height - text_height) // 2
 
+
     # Subtle watermark
     draw.text(
         (x, y),
@@ -66,51 +73,60 @@ def create_qr(data):
         fill=(100, 100, 100, 35)
     )
 
+
     img = Image.alpha_composite(
         img,
         overlay
     )
 
-    # Convert image to memory
-    image_buffer = io.BytesIO()
+
+    # --------------------------------
+    # Store only in memory
+    # --------------------------------
+
+    buffer = io.BytesIO()
 
     img.convert("RGB").save(
-        image_buffer,
+        buffer,
         format="PNG"
     )
 
-    image_buffer.seek(0)
+    buffer.seek(0)
 
-    return image_buffer
+    return buffer
 
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-
-    qr_data = None
-
+    # Accept submissions from older cached versions of the page that posted
+    # directly to the root URL. New submissions use /generate.
     if request.method == "POST":
+        return generate()
 
-        data = request.form.get(
-            "data",
-            ""
-        ).strip()
+    return render_template("index.html")
 
-        if data:
 
-            image_buffer = create_qr(data)
+@app.route("/generate", methods=["POST"])
+def generate():
 
-            # Convert image to Base64 for browser
-            import base64
+    data = request.form.get("data", "").strip()
 
-            qr_data = base64.b64encode(
-                image_buffer.getvalue()
-            ).decode("utf-8")
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "Please enter a link or text."
+        }), 400
 
-    return render_template(
-        "index.html",
-        qr_data=qr_data
-    )
+    image_buffer = create_qr(data)
+
+    qr_base64 = base64.b64encode(
+        image_buffer.getvalue()
+    ).decode("utf-8")
+
+    return jsonify({
+        "success": True,
+        "qr": qr_base64
+    })
 
 
 @app.route("/download", methods=["POST"])
@@ -121,10 +137,13 @@ def download():
         ""
     ).strip()
 
+
     if not data:
         return "No QR data provided.", 400
 
+
     image_buffer = create_qr(data)
+
 
     return send_file(
         image_buffer,
